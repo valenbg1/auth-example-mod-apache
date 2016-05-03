@@ -14,6 +14,22 @@ Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib
 
 Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedin.com/in/valenbg1)).
 
+## Índice
+* [Introducción](#introducción)
+  * [Apache httpd](#apache-httpd)
+    * [apxs](#apxs)
+      * [Crear plantilla de ejemplo para desarrollar un módulo](#crear-plantilla-de-ejemplo-para-desarrollar-un-módulo)
+      * [Compilar, instalar y activar nuestro módulo en el servidor](#compilar-instalar-y-activar-nuestro-módulo-en-el-servidor)
+  * [Eclipse IDE](#eclipse-ide)
+    * [Instalar Eclipse](#instalar-eclipse)
+    * [Crear un nuevo proyecto para nuestro módulo](#crear-un-nuevo-proyecto-para-nuestro-módulo)
+* [Crear un módulo para Apache](#crear-un-módulo-para-apache)
+  * [Declarar el módulo](#declarar-el-módulo)
+  * [Configuración de nuestro módulo](#configuración-de-nuestro-módulo)
+  * [Directivas](#directivas)
+    * [Funciones para manejar las directivas](#funciones-para-manejar-las-directivas)
+* [Referencias](#referencias)
+
 ## Introducción
 
 ### Apache httpd
@@ -92,7 +108,7 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
 Declaramos un nuevo módulo que se llamará [*auth_example_module*](#auth_example_module):
 * [**create_dir_conf**](#create_dir_conf): función de nuestro módulo que creará una nueva configuración por directorio (las configuraciones se explican luego).
 * [**merge_dir_conf**](#merge_dir_conf): función de nuestro módulo que mezcla dos configuraciones distintas.
-* [**directives**](#directivas): tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
+* [**directives**](#directives): tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
 * **register_hooks**: función para registrar nuestras funciones de enganche con el servidor.
 
 ### Configuración de nuestro módulo
@@ -195,11 +211,11 @@ Macro que declara una directiva que acepta 1 parámetro | Nombre de la directiva
 Los contextos posibles en los que se acepta la directiva son:
 * [**RSRC_CONF**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga2c51f4c7392fa5af1afe797470dc16e3): Archivos *.conf* fuera de tags *\<Directory\>* o *\<Location\>*.
 * [**ACCESS_CONF**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga09a3c6983aa6dc02f1d1f49aea0ff4ee): Archivos *.conf* dentro de tags *\<Directory\>* o *\<Location\>*.
-* [**OR_OPTIONS**](https://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga498a222873d29356a1ab9bd3f936b270): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Options*.
-* [**OR_FILEINFO**](https://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga3f1f59e707b2f247220fe64d06cb557d): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride FileInfo*.
-* [**OR_AUTHCFG**](https://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#gad707d4eac4b22c5bc225b784ecb6c90e): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride AuthConfig*.
-* [**OR_INDEXES**](https://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga1470585899bbca9fd583e49f17336e1b): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Indexes*.
-* [**OR_ALL**](https://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga1cf7da2bf7d8b3caaea4cb6a9abf02b5): En cualquier sitio en archivos *.conf* y *.htaccess*.
+* [**OR_OPTIONS**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga498a222873d29356a1ab9bd3f936b270): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Options*.
+* [**OR_FILEINFO**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga3f1f59e707b2f247220fe64d06cb557d): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride FileInfo*.
+* [**OR_AUTHCFG**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#gad707d4eac4b22c5bc225b784ecb6c90e): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride AuthConfig*.
+* [**OR_INDEXES**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga1470585899bbca9fd583e49f17336e1b): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Indexes*.
+* [**OR_ALL**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga1cf7da2bf7d8b3caaea4cb6a9abf02b5): En cualquier sitio en archivos *.conf* y *.htaccess*.
 
 #### Funciones para manejar las directivas
 
