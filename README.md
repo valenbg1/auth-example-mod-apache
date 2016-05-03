@@ -80,7 +80,7 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
 Declaramos un nuevo módulo que se llamará *auth_example_module*:
 * **create_dir_conf**: función de nuestro módulo que creará una nueva configuración por directorio.
 * **merge_dir_conf**: función de nuestro módulo que mezcla dos configuraciones distintas.
-* **directives**: tabla de directivas para nuestro módulo, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo.
+* **directives**: tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo.
 * **register_hooks**: función para registrar nuestras funciones de enganche con Apache.
 
 ### Configuración de nuestro módulo
@@ -154,3 +154,33 @@ void *merge_dir_conf(apr_pool_t *pool, void *BASE, void *ADD)
     return conf;
 }
 ```
+
+### Directivas
+
+Son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo. Es un array de estructuras *command_rec*:
+```c
+static const command_rec directives[] =
+{
+	AP_INIT_TAKE1("AuthExampleLoginsPath", set_logins_path, NULL, ACCESS_CONF,
+			"Sets the logins file path"),
+	AP_INIT_TAKE1("AuthExampleLogsPath", set_logs_path, NULL, ACCESS_CONF,
+			"Sets the logs file path"),
+	AP_INIT_TAKE1("AuthExampleFlush", set_flush, NULL, ACCESS_CONF,
+			"Allows the 'flush' mode [allow|deny]"),
+	{ NULL }
+};
+```
+Como ejemplo, la explicación del primer elemento:
+
+AP_INIT_TAKE1( | "AuthExampleLoginsPath", | set_logins_path, | NULL, | ACCESS_CONF, | "Sets the logins file path")
+--- | --- | --- | --- | --- | ---
+Macro que declara una directiva que acepta 1 parámetro | Nombre de la directiva | Función que maneja la directiva | Función (opcional) que guarda la configuración | Contexto en el que se acepta la directiva | Breve descripción de la directiva
+
+Los contextos posibles para la directiva son:
+* **RSRC_CONF**: Archivos *.conf* fuera de tags *<Directory>* o *<Location>*.
+* **ACCESS_CONF**: Archivos *.conf* dentro de tags *<Directory>* o *<Location>*.
+* **OR_OPTIONS**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Options*.
+* **OR_FILEINFO**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride FileInfo*.
+* **OR_AUTHCFG**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride AuthConfig*.
+* **OR_INDEXES**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Indexes*.
+* **OR_ALL**: En cualquier sitio en archivos *.conf* y *.htaccess*.
