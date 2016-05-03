@@ -7,6 +7,7 @@ Autentica un usuario contra un fichero de logins posibles.
 Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib/) 8.4.0 amd64 y [Apache httpd](http://httpd.apache.org/) 2.4.10.
 
 ### Referencias
+
 * [Developing modules for the Apache HTTP Server 2.4](http://httpd.apache.org/docs/2.4/developer/modguide.html).
 * [Apache2 Documentation](http://ci.apache.org/projects/httpd/trunk/doxygen/index.html).
 * [Apache Portable Runtime Documentation](http://apr.apache.org/docs/apr/2.0/index.html).
@@ -15,6 +16,7 @@ Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib
 Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedin.com/in/valenbg1)).
 
 ## Índice
+
 * [Introducción](#introducción)
   * [Apache httpd](#apache-httpd)
     * [apxs](#apxs)
@@ -28,6 +30,8 @@ Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedi
   * [Configuración de nuestro módulo](#configuración-de-nuestro-módulo)
   * [Directivas](#directivas)
     * [Funciones para manejar las directivas](#funciones-para-manejar-las-directivas)
+  * [Registrar nuestras funciones con el servidor](#registrar-nuestras-funciones-con-el-servidor)
+  * [Crear nuestro propio *handler*](#crear-nuestro-propio-handler)
 * [Referencias](#referencias)
 
 ## Introducción
@@ -109,7 +113,7 @@ Declaramos un nuevo módulo que se llamará [*auth_example_module*](#auth_exampl
 * [**create_dir_conf**](#create_dir_conf): función de nuestro módulo que creará una nueva configuración por directorio (las configuraciones se explican luego).
 * [**merge_dir_conf**](#merge_dir_conf): función de nuestro módulo que mezcla dos configuraciones distintas.
 * [**directives**](#directives): tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
-* **register_hooks**: función para registrar nuestras funciones de enganche con el servidor.
+* [**register_hooks**](#register_hooks): función para registrar nuestras funciones de enganche con el servidor.
 
 ### Configuración de nuestro módulo
 
@@ -241,3 +245,24 @@ const char *set_logins_path(cmd_parms *cmd, void *cfg, const char *arg)
 ```
 
 *set_logs_path* y *set_flush* son similares.
+
+### Registrar nuestras funciones con el servidor
+
+En la [declaración del módulo](#auth_example_module), indicamos una función que vamos a utilizar para registrar nuestras funciones con Apache:
+<a name=register_hooks></a>
+```c
+static void register_hooks(apr_pool_t *p)
+{
+	/*
+	 * En este caso, registramos un nuevo handler cuya función es
+	 * 'auth_example_handler'. Con 'APR_HOOK_LAST' le indicamos a
+	 * Apache que nuestro handler debe ser llamado de los últimos en
+	 * la cola (p.e. después de mod_rewrite, que redirecciona urls
+	 * al estilo /parent/child a /parent?child=1).
+	 */
+    ap_hook_handler(auth_example_handler, NULL, NULL, APR_HOOK_LAST);
+}
+```
+
+### Crear nuestro propio *handler*
+
