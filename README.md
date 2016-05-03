@@ -1,30 +1,35 @@
-# Apache auth_example module
+# Módulo Apache *auth_example*
 
 Módulo de ejemplo de login básico para Apache httpd 2.4
 
 Autentica un usuario contra un fichero de logins posibles.
-Basado en *http://httpd.apache.org/docs/2.4/developer/modguide.html*.
 
-Este tutorial se ha realizado usando un SO [Debian](http://www.debian.org/distrib/) 8.4.0 amd64 y [Apache httpd](http://httpd.apache.org/) 2.4.10.
+Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib/) 8.4.0 amd64 y [Apache httpd](http://httpd.apache.org/) 2.4.10.
 
-Valen Blanco (*http://github.com/valenbg1*).
+### Referencias
+* [Developing modules for the Apache HTTP Server 2.4](http://httpd.apache.org/docs/2.4/developer/modguide.html).
+* [Apache2 Documentation](http://ci.apache.org/projects/httpd/trunk/doxygen/index.html).
+* [Apache Portable Runtime Documentation](http://apr.apache.org/docs/apr/2.0/index.html).
+* [Apache HTTP Server Version 2.4 Documentation](http://httpd.apache.org/docs/2.4/en/).
+
+Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedin.com/in/valenbg1)).
 
 ## Introducción
 
-### Instalar Apache httpd
-Para instalar Apache en nuestra máquina, así como los paquetes *developer*, podemos hacerlo en la terminal:
+### Apache httpd
+Para instalar Apache en nuestra máquina, así como los paquetes *developer*, podemos hacerlo desde la terminal:
 
 `apt-get install apache2 apache2-bin apache2-data apache2-dbg apache2-dev apache2-doc apache2-utils libapr1 libapr1-dev libaprutil1 libaprutil1-dev`
 
-### apxs
+#### apxs
 
-#### Crear *template* de ejemplo para desarrollar un módulo de Apache
+##### Crear plantilla de ejemplo para desarrollar un módulo
 
-Mediante la herramienta *apxs* que nos proporciona Apache, podemos crear un *template* de ejemplo que contiene un *Makefile* y un fichero fuente de ejemplo para comenzar a desarrollar un módulo, mediante la terminal:
+Mediante la herramienta *apxs* que nos proporciona Apache, podemos crear una plantilla de ejemplo que contiene un *Makefile* y un fichero fuente para comenzar a desarrollar un módulo, mediante la terminal:
 
 `apxs -g -n auth_example`
 
-#### Compilar, instalar y activar nuestro módulo en Apache
+##### Compilar, instalar y activar nuestro módulo en el servidor
 
 En la terminal, en el directorio donde estemos trabajando:
 
@@ -33,7 +38,7 @@ En la terminal, en el directorio donde estemos trabajando:
 * `-i`: instala el módulo en la carpeta de Apache.
 * `-a`: activa el módulo en el archivo *.conf* de Apache (realmente sólo es necesario la primera vez).
 
-Después habrá que reiniciar el servidor Apache: `apachectl restart`.
+Después habrá que reiniciar el servidor: `apachectl restart`.
 
 ### Eclipse IDE
 
@@ -45,17 +50,22 @@ Para editar el código he usado Eclipse C/C++, que puede conseguirse en este [li
 
 #### Crear un nuevo proyecto para nuestro módulo
 
-Habrá que crear un nuevo proyecto a partir del *Makefile* que ya tenemos (que fue creado con `apxs -g`). En Eclipse: File -> New -> Project... -> C/C++ -> Makefile Project with Existing Code:
+Habrá que crear un nuevo proyecto a partir del *Makefile* plantilla que ya tenemos. En Eclipse:
+> File -> New -> Project... -> C/C++ -> Makefile Project with Existing Code:
+
 * **Project Name**: p.e. Apache auth_example module.
 * **Existing Code Location**: la carpeta donde esté el código fuente.
 * **Languages**: seleccionar sólo C.
 * **Toolchain for Indexer Settings**: yo estoy usando *Linux GCC*.
 
-Una vez creado el proyecto, hay que incluir dos *paths* con las cabeceras de Apache y APR en el proyecto. En Eclipse: botón derecho sobre el proyecto -> Properties -> C/C++ General -> Paths and Symbols -> Includes -> GNU C -> Add... y añadimos las carpetas con las cabeceras, en mi caso:
+Una vez creado el proyecto, hay que incluir dos *paths* con las cabeceras de Apache y APR en el proyecto. En Eclipse:
+> Botón derecho sobre el proyecto -> Properties -> C/C++ General -> Paths and Symbols -> Includes -> GNU C -> Add... y añadimos las carpetas con las cabeceras, en mi caso:
+
 * `/usr/include/apache2`
 * `/usr/include/apr-1.0`
 
-Añadidas las cabeceras, sólo queda refrescar el *C index* del proyecto. En Eclipse: botón derecho sobre el proyecto -> Index -> Rebuild y Freshen All Files.
+Añadidas las cabeceras, sólo queda refrescar el *C index* del proyecto. En Eclipse:
+> Botón derecho sobre el proyecto -> Index -> Rebuild y Freshen All Files.
 
 ## Crear un módulo para Apache
 
@@ -70,7 +80,7 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
     STANDARD20_MODULE_STUFF,
     create_dir_conf,
     merge_dir_conf,
-    NULL, // Función que creará una nueva configuración para servidores distintos.
+    NULL, // Función que crea una nueva configuración para servidores distintos.
     NULL, // Función para mezclar dos configuraciones para servidores distintos.
     directives,
     register_hooks
@@ -78,10 +88,10 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
 ```
 
 Declaramos un nuevo módulo que se llamará *auth_example_module*:
-* **create_dir_conf**: función de nuestro módulo que creará una nueva configuración por directorio.
+* **create_dir_conf**: función de nuestro módulo que creará una nueva configuración por directorio (las configuraciones se explican luego).
 * **merge_dir_conf**: función de nuestro módulo que mezcla dos configuraciones distintas.
-* **directives**: tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo.
-* **register_hooks**: función para registrar nuestras funciones de enganche con Apache.
+* **directives**: tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
+* **register_hooks**: función para registrar nuestras funciones de enganche con el servidor.
 
 ### Configuración de nuestro módulo
 
@@ -89,16 +99,19 @@ La configuración de nuestro módulo se va a guardar en una estructura que defin
 ```c
 #define BUF_SIZE 256
 
+// Definición del tipo 'bool' para mayor legibilidad del código.
+typedef char bool;
+
 typedef struct
 {
 	char context[BUF_SIZE]; // Argumento que pasa Apache al crear una configuración.
 	char logins_path[BUF_SIZE]; // Path hacia un fichero de logins.
 	char logs_path[BUF_SIZE]; // Path hacia un fichero de logs.
-	bool flush; // Permite o no visualizar el fichero de logins completo (p.e. en localhost/auth/flush).
+	bool flush; // Permite o no visualizar el fichero de logins completo (p.e. al acceder a localhost/auth/flush).
 } auth_ex_cfg;
 ```
 
-Para manejar esta estructura, hemos definido dos funciones que controlan la creación y la mezcla de configuraciones respectivamente:
+Para manejar esta estructura, se definen dos funciones que controlan la creación y la mezcla de configuraciones respectivamente:
 * **create_dir_conf**:
 ```c
 void *create_dir_conf(apr_pool_t *pool, char *context)
@@ -157,7 +170,7 @@ void *merge_dir_conf(apr_pool_t *pool, void *BASE, void *ADD)
 
 ### Directivas
 
-Son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo. Es un array de estructuras *command_rec*:
+Son los argumentos que luego podemos indicar en el archivo *.conf* de nuestro módulo para configurarlo. Es un array de estructuras *command_rec*:
 ```c
 static const command_rec directives[] =
 {
@@ -170,15 +183,14 @@ static const command_rec directives[] =
 	{ NULL }
 };
 ```
-Como ejemplo, la explicación del primer elemento:
 
 AP_INIT_TAKE1( | "AuthExampleLoginsPath", | set_logins_path, | NULL, | ACCESS_CONF, | "Sets the logins file path")
---- | --- | --- | --- | --- | ---
+:---: | :---: | :---: | :---: | :---: | :---:
 Macro que declara una directiva que acepta 1 parámetro | Nombre de la directiva | Función que maneja la directiva | Función (opcional) que guarda la configuración | Contexto en el que se acepta la directiva | Breve descripción de la directiva
 
-Los contextos posibles para la directiva son:
-* **RSRC_CONF**: Archivos *.conf* fuera de tags *<Directory>* o *<Location>*.
-* **ACCESS_CONF**: Archivos *.conf* dentro de tags *<Directory>* o *<Location>*.
+Los contextos posibles en los que se acepta la directiva son:
+* **RSRC_CONF**: Archivos *.conf* fuera de tags *\<Directory\>* o *\<Location\>*.
+* **ACCESS_CONF**: Archivos *.conf* dentro de tags *\<Directory\>* o *\<Location\>*.
 * **OR_OPTIONS**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Options*.
 * **OR_FILEINFO**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride FileInfo*.
 * **OR_AUTHCFG**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride AuthConfig*.
