@@ -336,7 +336,7 @@ Pedimos a Apache que nos dé la tabla de argumentos de la consulta HTTP tipo GET
 			"<b>Mi configuracion es:</u>"
 			"<ul><li>Context:</b> '%s'.</li>"
 			"<li><b>Logins file path:</b> '%s'.</li>"
-    			"<li><b>Logs file path:</b> '%s'.</li>"
+    		"<li><b>Logs file path:</b> '%s'.</li>"
 			"<li><b>Flush:</b> '%d'.</li></ul><br>",
 			config->context, config->logins_path, config->logs_path, config->flush);
 
@@ -372,6 +372,10 @@ Ahora procedemos a abrir los ficheros de *logins* (en modo lectura *buffered*) y
     	{
 ```
 Vamos leyendo el fichero de *logins* línea por línea, la línea se va guardando en *buffer*.
+
+
+
+POR TERMINAR...
 
 ```c
     	
