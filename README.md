@@ -25,7 +25,7 @@ Para instalar Apache en nuestra máquina, así como los paquetes *developer*, po
 
 ##### Crear plantilla de ejemplo para desarrollar un módulo
 
-Mediante la herramienta *apxs* que nos proporciona Apache, podemos crear una plantilla de ejemplo que contiene un *Makefile* y un fichero fuente para comenzar a desarrollar un módulo, mediante la terminal:
+Mediante la herramienta [*apxs*](http://httpd.apache.org/docs/current/programs/apxs.html) que nos proporciona Apache, podemos crear una plantilla de ejemplo que contiene un *Makefile* y un fichero fuente para comenzar a desarrollar un módulo, mediante la terminal:
 
 `apxs -g -n auth_example`
 
@@ -51,21 +51,22 @@ Para editar el código he usado Eclipse C/C++, que puede conseguirse en este [li
 #### Crear un nuevo proyecto para nuestro módulo
 
 Habrá que crear un nuevo proyecto a partir del *Makefile* plantilla que ya tenemos. En Eclipse:
-> File -> New -> Project... -> C/C++ -> Makefile Project with Existing Code:
+> File -> New -> Project... -> C/C++ -> Makefile Project with Existing Code
 
 * **Project Name**: p.e. Apache auth_example module.
 * **Existing Code Location**: la carpeta donde esté el código fuente.
 * **Languages**: seleccionar sólo C.
 * **Toolchain for Indexer Settings**: yo estoy usando *Linux GCC*.
 
-Una vez creado el proyecto, hay que incluir dos *paths* con las cabeceras de Apache y APR en el proyecto. En Eclipse:
-> Botón derecho sobre el proyecto -> Properties -> C/C++ General -> Paths and Symbols -> Includes -> GNU C -> Add... y añadimos las carpetas con las cabeceras, en mi caso:
+Una vez creado el proyecto, hay que incluir dos *paths* con las cabeceras de Apache y [APR](http://apr.apache.org/) en el proyecto. En Eclipse:
+> Botón derecho sobre el proyecto -> Properties -> C/C++ General -> Paths and Symbols -> Includes -> GNU C -> Add...
 
+Y añadimos las carpetas con las cabeceras, en mi caso:
 * `/usr/include/apache2`
 * `/usr/include/apr-1.0`
 
 Añadidas las cabeceras, sólo queda refrescar el *C index* del proyecto. En Eclipse:
-> Botón derecho sobre el proyecto -> Index -> Rebuild y Freshen All Files.
+> Botón derecho sobre el proyecto -> Index -> Rebuild y Freshen All Files
 
 ## Crear un módulo para Apache
 
@@ -74,6 +75,7 @@ Voy a explicar paso a paso el archivo [mod_auth_example.c](http://github.com/val
 ### Declarar el módulo
 
 Comenzamos con la declaración del módulo, que definirá como engancha nuestro módulo con Apache:
+<a name="dec-module"></a>
 ```c
 module AP_MODULE_DECLARE_DATA auth_example_module =
 {
@@ -87,7 +89,7 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
 };
 ```
 
-Declaramos un nuevo módulo que se llamará *auth_example_module*:
+Declaramos un nuevo módulo que se llamará [*auth_example_module*](#dec-module):
 * **create_dir_conf**: función de nuestro módulo que creará una nueva configuración por directorio (las configuraciones se explican luego).
 * **merge_dir_conf**: función de nuestro módulo que mezcla dos configuraciones distintas.
 * **directives**: tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
@@ -196,3 +198,27 @@ Los contextos posibles en los que se acepta la directiva son:
 * **OR_AUTHCFG**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride AuthConfig*.
 * **OR_INDEXES**: Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Indexes*.
 * **OR_ALL**: En cualquier sitio en archivos *.conf* y *.htaccess*.
+
+#### Funciones para manejar las directivas
+
+En el array de directivas anterior hemos definido que las funciones de manejo serían *set_logins_path*, *set_logs_path* y *set_flush*. Estas funciones controlan lo que pasa cuando en el fichero de configuración *.conf* del módulo tenemos alguna de las directivas que hemos indicado (*AuthExampleLoginsPath*, *AuthExampleLogsPath* y *AuthExampleFlush*). Como ejemplo vamos a ver *set_logins_path* (las dos restantes pueden verse en el archivo [mod_auth_example.c](http://github.com/valenbg1/auth-example-mod-apache/blob/master/mod_auth_example.c)):
+```c
+const char *set_logins_path(cmd_parms *cmd, void *cfg, const char *arg)
+{
+	auth_ex_cfg *config = (auth_ex_cfg*) cfg;
+
+	if (config)
+	{
+		/*
+		 * '*arg' sería el argumento de la directiva 'AuthExampleLoginsPath' que
+		 * se encuentra en el fichero '.conf'
+		 * (p.e. 'AuthExampleLoginsPath "/etc/apache2/mod_auth_example-logins"').
+		 */
+		strcpy(config->logins_path, arg);
+	}
+
+	return NULL;
+}
+```
+
+*set_logs_path* y *set_flush* son similares.
