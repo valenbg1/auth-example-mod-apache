@@ -1,17 +1,17 @@
-# Módulo Apache *auth_example*
+# Módulo Apache httpd auth_example
 
 Módulo de ejemplo de login básico para Apache httpd 2.4
 
 Autentica un usuario contra un fichero de logins posibles.
 
-Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib/) 8.4.0 amd64 y [Apache httpd](http://httpd.apache.org/) 2.4.10.
+Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib/) 8.4.0 amd64 y [Apache httpd](http://httpd.apache.org/) 2.4.10
 
 ### Referencias
 
-* [Developing modules for the Apache HTTP Server 2.4](http://httpd.apache.org/docs/2.4/developer/modguide.html).
-* [Apache2 Documentation](http://ci.apache.org/projects/httpd/trunk/doxygen/index.html).
-* [Apache Portable Runtime Documentation](http://apr.apache.org/docs/apr/2.0/index.html).
-* [Apache HTTP Server Version 2.4 Documentation](http://httpd.apache.org/docs/2.4/en/).
+* [Developing modules for the Apache HTTP Server 2.4](http://httpd.apache.org/docs/2.4/developer/modguide.html)
+* [Apache2 Documentation](http://ci.apache.org/projects/httpd/trunk/doxygen/index.html)
+* [Apache Portable Runtime Documentation](http://apr.apache.org/docs/apr/2.0/index.html)
+* [Apache HTTP Server Version 2.4 Documentation](http://httpd.apache.org/docs/2.4/en/)
 
 Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedin.com/in/valenbg1)).
 
@@ -31,7 +31,7 @@ Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedi
   * [Directivas](#directivas)
     * [Funciones para manejar las directivas](#funciones-para-manejar-las-directivas)
   * [Registrar nuestras funciones con el servidor](#registrar-nuestras-funciones-con-el-servidor)
-  * [Crear nuestro propio *handler*](#crear-nuestro-propio-handler)
+  * [Crear nuestro propio handler](#crear-nuestro-propio-handler)
 * [Referencias](#referencias)
 
 ## Introducción
@@ -39,7 +39,7 @@ Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedi
 ### Apache httpd
 Para instalar Apache en nuestra máquina, así como los paquetes *developer*, podemos hacerlo desde la terminal:
 
-`apt-get install apache2 apache2-bin apache2-data apache2-dbg apache2-dev apache2-doc apache2-utils libapr1 libapr1-dev libaprutil1 libaprutil1-dev`
+`apt-get install build-essential apache2 apache2-bin apache2-data apache2-dbg apache2-dev apache2-doc apache2-utils libapr1 libapr1-dev libaprutil1 libaprutil1-dev`
 
 #### apxs
 
@@ -78,7 +78,7 @@ Habrá que crear un nuevo proyecto a partir del *Makefile* plantilla que ya tene
 * **Languages**: seleccionar sólo C.
 * **Toolchain for Indexer Settings**: yo estoy usando *Linux GCC*.
 
-Una vez creado el proyecto, hay que incluir dos *paths* con las cabeceras de Apache y [APR](http://apr.apache.org/) en el proyecto. En Eclipse:
+Una vez creado el proyecto, hay que incluir dos paths con las cabeceras de Apache y [APR](http://apr.apache.org/) en el proyecto. En Eclipse:
 > Botón derecho sobre el proyecto -> Properties -> C/C++ General -> Paths and Symbols -> Includes -> GNU C -> Add...
 
 Y añadimos las carpetas con las cabeceras, en mi caso:
@@ -109,7 +109,7 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
 };
 ```
 
-Declaramos un nuevo módulo que se llamará [*auth_example_module*](#auth_example_module):
+Declaramos un nuevo módulo que se llamará *auth_example_module*:
 * [**create_dir_conf**](#create_dir_conf): función de nuestro módulo que creará una nueva configuración por directorio (las configuraciones se explican luego).
 * [**merge_dir_conf**](#merge_dir_conf): función de nuestro módulo que mezcla dos configuraciones distintas.
 * [**directives**](#directives): tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
@@ -122,15 +122,15 @@ La configuración de nuestro módulo se va a guardar en una estructura que defin
 ```c
 #define BUF_SIZE 256
 
-// Definición del tipo 'bool' para mayor legibilidad del código.
+// Definición del tipo bool para mayor legibilidad del código.
 typedef char bool;
 
 typedef struct
 {
-	char context[BUF_SIZE]; // Argumento que pasa Apache al crear una configuración.
-	char logins_path[BUF_SIZE]; // Path hacia un fichero de logins.
-	char logs_path[BUF_SIZE]; // Path hacia un fichero de logs.
-	bool flush; // Permite o no visualizar el fichero de logins completo (p.e. al acceder a localhost/auth/flush).
+    char context[BUF_SIZE]; // Argumento que pasa Apache al crear una configuración.
+    char logins_path[BUF_SIZE]; // Path hacia un fichero de logins.
+    char logs_path[BUF_SIZE]; // Path hacia un fichero de logs.
+    bool flush; // Permite o no visualizar el fichero de logins completo (p.e. al acceder a localhost/auth/flush).
 } auth_ex_cfg;
 ```
 
@@ -139,28 +139,28 @@ Para manejar esta estructura, se definen dos funciones que controlan la creació
 ```c
 void *create_dir_conf(apr_pool_t *pool, char *context)
 {
-	if (!context)
-		context = "Undefined context";
+    if (!context)
+        context = "Undefined context";
 
-	/*
-	 * Pedimos memoria para alojar una nueva estructura 'auth_ex_cfg'
-	 * en el pool de memoria que nos deja Apache para nuestro módulo
-	 * (referenciado con 'pool'). En este caso además se inicializa
-	 * el espacio reservado con 0's.
-	 */
-	auth_ex_cfg *cfg = apr_pcalloc(pool, sizeof(auth_ex_cfg));
+    /*
+     * Pedimos memoria para alojar una nueva estructura 'auth_ex_cfg'
+     * en el pool de memoria que nos deja Apache para nuestro módulo
+     * (referenciado con 'pool'). En este caso además se inicializa
+     * el espacio reservado con 0's.
+     */
+    auth_ex_cfg *cfg = apr_pcalloc(pool, sizeof(auth_ex_cfg));
 
-	if (cfg)
-	{
-		// Ponemos unos valores por defecto para la configuración.
+    if (cfg)
+    {
+        // Ponemos unos valores por defecto para la configuración.
 
-		strcpy(cfg->context, context);
-		strcpy(cfg->logins_path, "/etc/apache2/mod_auth_example-logins");
-		strcpy(cfg->logs_path, "/etc/apache2/mod_auth_example-logs");
-		cfg->flush = FALSE;
-	}
+        strcpy(cfg->context, context);
+        strcpy(cfg->logins_path, "/etc/apache2/mod_auth_example-logins");
+        strcpy(cfg->logs_path, "/etc/apache2/mod_auth_example-logs");
+        cfg->flush = FALSE;
+    }
 
-	return cfg;
+    return cfg;
 }
 ```
 * <a name=merge_dir_conf></a>**merge_dir_conf**: función para mezclar dos estructuras [*auth_ex_cfg*](#auth_ex_cfg). Sirve para que directorios o localizaciones puedan heredar la configuración de su padre. Por ejemplo, si tenemos una localización *localhost/auth* y otra *localhost/auth/flush*, al crear la configuración de *localhost/auth/flush* Apache creará primero la configuración de *localhost/auth* (leyendo del fichero *.conf*), después la de *localhost/auth/flush*, y nos pasará punteros a ambas estructuras de configuración en los argumentos *BASE* y *ADD* respectivamente. Es nuestra responsabilidad definir cómo se integran estas dos configuraciones.
@@ -170,24 +170,24 @@ void *create_dir_conf(apr_pool_t *pool, char *context)
 
 void *merge_dir_conf(apr_pool_t *pool, void *BASE, void *ADD)
 {
-	auth_ex_cfg *base = (auth_ex_cfg*) BASE;
-	auth_ex_cfg *add = (auth_ex_cfg*) ADD;
-	auth_ex_cfg *conf = (auth_ex_cfg*) create_dir_conf(pool, "Merged configuration");
+    auth_ex_cfg *base = (auth_ex_cfg*) BASE;
+    auth_ex_cfg *add = (auth_ex_cfg*) ADD;
+    auth_ex_cfg *conf = (auth_ex_cfg*) create_dir_conf(pool, "Merged configuration");
 
- 	/*
-	 * En nuestro caso, si no está definido algún path para nuestra localización,
-	 * heredamos la configuración de la localización padre.
-	 */
-	strcpy(conf->logins_path, STREMPTY(add->logins_path) ? base->logins_path : add->logins_path);
-	strcpy(conf->logs_path, STREMPTY(add->logs_path) ? base->logs_path : add->logs_path);
+    /*
+     * En nuestro caso, si no está definido algún path para nuestra localización,
+     * heredamos la configuración de la localización padre.
+     */
+    strcpy(conf->logins_path, STREMPTY(add->logins_path) ? base->logins_path : add->logins_path);
+    strcpy(conf->logs_path, STREMPTY(add->logs_path) ? base->logs_path : add->logs_path);
 
-	/*
-	 * El valor del campo 'flush' no se hereda, tendrá que ser definido para cada
-	 * localización explícitamente o se usará el valor por defecto (FALSE).
-	 */
-	conf->flush = add->flush;
+    /*
+     * El valor del campo 'flush' no se hereda, tendrá que ser definido para cada
+     * localización explícitamente o se usará el valor por defecto (FALSE).
+     */
+    conf->flush = add->flush;
 
-	return conf;
+    return conf;
 }
 ```
 
@@ -198,13 +198,13 @@ Son los argumentos que luego podemos indicar en el archivo *.conf* de nuestro m�
 ```c
 static const command_rec directives[] =
 {
-	AP_INIT_TAKE1("AuthExampleLoginsPath", set_logins_path, NULL, ACCESS_CONF,
-		"Sets the logins file path"),
-	AP_INIT_TAKE1("AuthExampleLogsPath", set_logs_path, NULL, ACCESS_CONF,
-		"Sets the logs file path"),
-	AP_INIT_TAKE1("AuthExampleFlush", set_flush, NULL, ACCESS_CONF,
-		"Allows the 'flush' mode [allow|deny]"),
-	{ NULL }
+    AP_INIT_TAKE1("AuthExampleLoginsPath", set_logins_path, NULL, ACCESS_CONF,
+        "Sets the logins file path"),
+    AP_INIT_TAKE1("AuthExampleLogsPath", set_logs_path, NULL, ACCESS_CONF,
+        "Sets the logs file path"),
+    AP_INIT_TAKE1("AuthExampleFlush", set_flush, NULL, ACCESS_CONF,
+        "Allows the 'flush' mode [allow|deny]"),
+    { NULL }
 };
 ```
 
@@ -213,8 +213,8 @@ static const command_rec directives[] =
 Macro que declara una directiva que acepta 1 parámetro | Nombre de la directiva | Función que maneja la directiva | Función (opcional) que guarda la configuración | Contexto en el que se acepta la directiva | Breve descripción de la directiva
 
 Los contextos posibles en los que se acepta la directiva son:
-* [**RSRC_CONF**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga2c51f4c7392fa5af1afe797470dc16e3): Archivos *.conf* fuera de tags *\<Directory\>* o *\<Location\>*.
-* [**ACCESS_CONF**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga09a3c6983aa6dc02f1d1f49aea0ff4ee): Archivos *.conf* dentro de tags *\<Directory\>* o *\<Location\>*.
+* [**RSRC_CONF**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga2c51f4c7392fa5af1afe797470dc16e3): Archivos *.conf* fuera de tags \<Directory\> o \<Location\>.
+* [**ACCESS_CONF**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga09a3c6983aa6dc02f1d1f49aea0ff4ee): Archivos *.conf* dentro de tags \<Directory\> o \<Location\>.
 * [**OR_OPTIONS**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga498a222873d29356a1ab9bd3f936b270): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride Options*.
 * [**OR_FILEINFO**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#ga3f1f59e707b2f247220fe64d06cb557d): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride FileInfo*.
 * [**OR_AUTHCFG**](http://ci.apache.org/projects/httpd/trunk/doxygen/group__ConfigDirectives.html#gad707d4eac4b22c5bc225b784ecb6c90e): Archivos *.conf* y *.htaccess* cuando se indica *AllowOverride AuthConfig*.
@@ -223,24 +223,24 @@ Los contextos posibles en los que se acepta la directiva son:
 
 #### Funciones para manejar las directivas
 
-En el array de directivas anterior hemos definido que las funciones de manejo serían [*set_logins_path*](#set_logins_path), *set_logs_path* y *set_flush*. Estas funciones controlan lo que pasa cuando en el fichero de configuración *.conf* del módulo tenemos alguna de las directivas que hemos indicado ([*AuthExampleLoginsPath*](#directives), [*AuthExampleLogsPath*](#directives) y [*AuthExampleFlush*](#directives)). Como ejemplo vamos a ver [*set_logins_path*](#set_logins_path) (las dos restantes pueden verse en el archivo [mod_auth_example.c](http://github.com/valenbg1/auth-example-mod-apache/blob/master/mod_auth_example.c)):
+En el array de directivas anterior hemos definido que las funciones de manejo serían *set_logins_path*, *set_logs_path* y *set_flush*. Estas funciones controlan lo que pasa cuando en el fichero de configuración *.conf* del módulo tenemos alguna de las directivas que hemos indicado ([*AuthExampleLoginsPath*](#directives), [*AuthExampleLogsPath*](#directives) y [*AuthExampleFlush*](#directives)). Como ejemplo vamos a ver *set_logins_path* (las dos restantes pueden verse en el archivo [mod_auth_example.c](http://github.com/valenbg1/auth-example-mod-apache/blob/master/mod_auth_example.c)):
 <a name=set_logins_path></a>
 ```c
 const char *set_logins_path(cmd_parms *cmd, void *cfg, const char *arg)
 {
-	auth_ex_cfg *config = (auth_ex_cfg*) cfg;
+    auth_ex_cfg *config = (auth_ex_cfg*) cfg;
 
-	if (config)
-	{
-		/*
-		 * '*arg' sería el argumento de la directiva 'AuthExampleLoginsPath' que
-		 * se encuentra en el fichero '.conf'
-		 * (p.e. 'AuthExampleLoginsPath "/etc/apache2/mod_auth_example-logins"').
-		 */
-		strcpy(config->logins_path, arg);
-	}
+    if (config)
+    {
+        /*
+         * '*arg' sería el argumento de la directiva 'AuthExampleLoginsPath' que
+         * se encuentra en el fichero .conf
+         * (p.e. AuthExampleLoginsPath "/etc/apache2/mod_auth_example-logins").
+         */
+        strcpy(config->logins_path, arg);
+    }
 
-	return NULL;
+    return NULL;
 }
 ```
 
@@ -257,16 +257,16 @@ static void register_hooks(apr_pool_t *p)
      * En este caso, registramos un nuevo handler cuya función es
      * 'auth_example_handler'. Con 'APR_HOOK_LAST' le indicamos a
      * Apache que nuestro handler debe ser llamado de los últimos en
-     * la cola (p.e. después de mod_rewrite, que redirecciona urls
+     * la cola (p.e. después de mod_rewrite, módulo que reescribe urls
      * al estilo /parent/child a /parent?child=1).
      */
     ap_hook_handler(auth_example_handler, NULL, NULL, APR_HOOK_LAST);
 }
 ```
 
-### Crear nuestro propio *handler*
+### Crear nuestro propio handler
 
-El *handler* es la parte más pesada del módulo, que se encargará de manejar toda la autenticación del usuario y devolver resultados a la consulta HTTP. Vamos a ver la función *auth_example_handler* paso a paso:
+El handler es la parte más pesada del módulo, que se encargará de manejar toda la autenticación del usuario y devolver resultados a la consulta HTTP. Vamos a ver la función *auth_example_handler* paso a paso:
 
 ```c
 static int auth_example_handler(request_rec *r)
@@ -279,27 +279,27 @@ static int auth_example_handler(request_rec *r)
     if (!r->handler || strcmp(r->handler, "auth_example-handler"))
         return DECLINED;
 ```
-Apache nos pasa un puntero a una estructura de datos [request_rec](http://ci.apache.org/projects/httpd/trunk/doxygen/structrequest__rec.html) que contiene la información sobre la consulta que se ha realizado a nuestro servidor. En el campo [handler](http://ci.apache.org/projects/httpd/trunk/doxygen/structrequest__rec.html#a4fb5cec8fe63f73648e96a3af0dff91c) de la estructura se guarda el nombre del *handler* que debería atender la petición. Por lo tanto, si no es el nombre de nuestro *handler* (auth_example-handler), devolvemos [DECLINED](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__DAEMON.html#ga9eba11ca86461a3ae319311d64682dda).
+Apache nos pasa un puntero a una estructura de datos [*request_rec*](http://ci.apache.org/projects/httpd/trunk/doxygen/structrequest__rec.html) que contiene la información sobre la consulta que se ha realizado a nuestro servidor. En el campo [*handler*](http://ci.apache.org/projects/httpd/trunk/doxygen/structrequest__rec.html#a4fb5cec8fe63f73648e96a3af0dff91c) de la estructura se guarda el nombre del handler que debería atender la petición. Por lo tanto, si no es el nombre de nuestro handler (*auth_example-handler*), devolvemos [*DECLINED*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__DAEMON.html#ga9eba11ca86461a3ae319311d64682dda).
 
 ```c
     auth_ex_cfg *config = (auth_ex_cfg*) ap_get_module_config(r->per_dir_config, &auth_example_module);
 ```
-Pedimos a Apache que nos dé la estructura de configuración para esta petición (que dependerá del contexto, p.e. bloques tipo *\<Directory\>* o *\<Location\>* en el archivo *.conf* del módulo).
+Pedimos a Apache que nos dé la estructura de configuración para esta petición (que dependerá del contexto, p.e. bloques tipo \<Directory\> o \<Location\> en el archivo *.conf* del módulo).
 
 ```c
     apr_finfo_t f_logins_info, f_logs_info;
 
     if ((apr_stat(&f_logins_info, config->logins_path, APR_FINFO_MIN, r->pool) == APR_SUCCESS) &&
-    	(apr_stat(&f_logs_info, config->logs_path, APR_FINFO_MIN, r->pool) == APR_SUCCESS))
+        (apr_stat(&f_logs_info, config->logs_path, APR_FINFO_MIN, r->pool) == APR_SUCCESS))
     {
-    	if ((f_logins_info.filetype == APR_NOFILE) || (f_logins_info.filetype == APR_DIR) ||
-    		(f_logs_info.filetype == APR_NOFILE) || (f_logs_info.filetype == APR_DIR))
-    		return HTTP_NOT_FOUND;
+        if ((f_logins_info.filetype == APR_NOFILE) || (f_logins_info.filetype == APR_DIR) ||
+            (f_logs_info.filetype == APR_NOFILE) || (f_logs_info.filetype == APR_DIR))
+            return HTTP_NOT_FOUND;
     }
     else
-    	return HTTP_FORBIDDEN;
+        return HTTP_FORBIDDEN;
 ```
-Ahora vamos a comprobar si podemos ejecutar un *stat* sobre los ficheros de *logins* y *logs* respectivamente, usando la [APR](http://apr.apache.org/), que es una API uniforme e independiente de la plataforma para funciones comunes de los sistemas operativos. Si los *paths* no apuntan a un fichero o apuntan a un directorio, devolvemos un [HTTP_NOT_FOUND](http://ci.apache.org/projects/httpd/trunk/doxygen/group__HTTP__Status.html#gabd505b5244bd18ae61c581484b4bc5a0). Si no se ha podido ejecutar el *stat*, probablemente no tenemo permiso para acceder a los ficheros, devolvemos un [HTTP_FORBIDDEN](http://ci.apache.org/projects/httpd/trunk/doxygen/group__HTTP__Status.html#ga92646f876056a1e5013e0050496dc04d). Usamos el *pool* de memoria que nos proporciona Apache.
+Ahora vamos a comprobar si podemos ejecutar un *stat* sobre los ficheros de logins y logs respectivamente, usando la [APR](http://apr.apache.org/), que es una API uniforme e independiente de la plataforma para funciones comunes de los sistemas operativos. Si los paths no apuntan a un fichero o apuntan a un directorio, devolvemos un [*HTTP_NOT_FOUND*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__HTTP__Status.html#gabd505b5244bd18ae61c581484b4bc5a0). Si no se ha podido ejecutar el *stat*, probablemente no tenemo permiso para acceder a los ficheros, devolvemos un [*HTTP_FORBIDDEN*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__HTTP__Status.html#ga92646f876056a1e5013e0050496dc04d). Usamos el pool de memoria que nos proporciona Apache.
 
 ```c
     apr_file_t *f_logins, *f_logs;
@@ -312,7 +312,7 @@ Ahora vamos a comprobar si podemos ejecutar un *stat* sobre los ficheros de *log
     passwd = apr_table_get(GET, "passwd");
 
     /*
-     * Estamos en modo 'flush' si 'config->flush' ha sido activado y no nos proporcionan
+     * Estamos en modo flush si 'config->flush' ha sido activado y no nos proporcionan
      * usuario o contraseña. En caso contrario, si falta alguno de los dos argumentos
      * devolvemos un 'HTTP_NETWORK_AUTHENTICATION_REQUIRED' (511).
      */
@@ -320,9 +320,9 @@ Ahora vamos a comprobar si podemos ejecutar un *stat* sobre los ficheros de *log
     flush_mode = config->flush && (!user || !passwd);
 
     if (!flush_mode && (!user || !passwd))
-    	return HTTP_NETWORK_AUTHENTICATION_REQUIRED;
+        return HTTP_NETWORK_AUTHENTICATION_REQUIRED;
 ```
-Pedimos a Apache que nos dé la tabla de argumentos de la consulta HTTP tipo GET en la estructura correspondiente. Luego usamos las funciones definidas ([ap_args_to_table](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__SCRIPT.html#gaed25877b529623a4d8f99f819ba1b7bd), [apr_table_get](http://ci.apache.org/projects/httpd/trunk/doxygen/group__apr__tables.html#ga4db13e3915c6b9a3142b175d4c15d915)) que nos permiten parsear la tabla para recoger los argumentos *user* y *passwd* respectivamente.
+Pedimos a Apache que nos dé la tabla de argumentos de la consulta HTTP tipo GET en la estructura correspondiente. Luego usamos las funciones definidas ([*ap_args_to_table*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__SCRIPT.html#gaed25877b529623a4d8f99f819ba1b7bd), [*apr_table_get*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__apr__tables.html#ga4db13e3915c6b9a3142b175d4c15d915)) que nos permiten parsear la tabla para recoger los argumentos *user* y *passwd* respectivamente.
 
 ```c
     // Configura el tipo de contenido que se está enviando de vuelta.
@@ -333,123 +333,121 @@ Pedimos a Apache que nos dé la tabla de argumentos de la consulta HTTP tipo GET
      * al estilo printf. Devolvemos la configuración de nuestro módulo.
      */
     ap_rprintf(r, "<h2><u>Bienvenido al sistema superseguro de autenticacion</h2>"
-			"<b>Mi configuracion es:</u>"
-			"<ul><li>Context:</b> '%s'.</li>"
-			"<li><b>Logins file path:</b> '%s'.</li>"
-    		"<li><b>Logs file path:</b> '%s'.</li>"
-			"<li><b>Flush:</b> '%d'.</li></ul><br>",
-			config->context, config->logins_path, config->logs_path, config->flush);
+                    "<b>Mi configuracion es:</u>"
+                    "<ul><li>Context:</b> '%s'.</li>"
+                    "<li><b>Logins file path:</b> '%s'.</li>"
+                    "<li><b>Logs file path:</b> '%s'.</li>"
+                    "<li><b>Flush:</b> '%d'.</li></ul><br>",
+                    config->context, config->logins_path, config->logs_path, config->flush);
 
     if (flush_mode)
     {
-    	// 'ap_rputs' funciona igual que 'ap_rprintf' pero sin argumentos.
-    	ap_rputs("<p>Modo <i>flush</i>!<br>"
-			"Vamos a ver todos los datos secretos abajo >:)</p><p><code>", r);
+        // 'ap_rputs' funciona igual que 'ap_rprintf' pero sin argumentos.
+        ap_rputs("<p>Modo <i>flush</i>!<br>"
+                    "Vamos a ver todos los datos secretos abajo >:)</p><p><code>", r);
     }
     else
-    	ap_rprintf(r, "<p>Vamos a comprobar las credenciales para <b>%s</b>.</p>", user);
+        ap_rprintf(r, "<p>Vamos a comprobar las credenciales para <b>%s</b>.</p>", user);
 ```
 Vamos a devolver la configuración actual de nuestro módulo a la petición HTTP.
 
 ```c
     if ((apr_file_open(&f_logins, config->logins_path, APR_FOPEN_READ | APR_FOPEN_BUFFERED, APR_OS_DEFAULT, r->pool)
-    	== APR_SUCCESS) &&
-    	(apr_file_open(&f_logs, config->logs_path, APR_FOPEN_WRITE | APR_FOPEN_APPEND, APR_OS_DEFAULT, r->pool)
-    		== APR_SUCCESS))
+        == APR_SUCCESS) &&
+        (apr_file_open(&f_logs, config->logs_path, APR_FOPEN_WRITE | APR_FOPEN_APPEND, APR_OS_DEFAULT, r->pool)
+            == APR_SUCCESS))
     {
 ```
-Ahora procedemos a abrir los ficheros de *logins* (en modo lectura *buffered*) y de *logs* (en modo escritura *append*), con los permisos por defecto y usando el *pool* de memoria que nos proporciona Apache. Una mejor solución sería tener estos ficheros cargados previamente en memoria (p.e. en una configuración inicial del módulo) para poder consultarlos más rápidamente en cada petición.
+Ahora procedemos a abrir los ficheros de logins (en modo lectura buffered) y de logs (en modo escritura append), con los permisos por defecto y usando el pool de memoria que nos proporciona Apache. Una mejor solución sería tener estos ficheros cargados previamente en memoria (p.e. en una configuración inicial del módulo) para poder consultarlos más rápidamente en cada petición.
 
 ```c
-	char buffer[BUF_SIZE];
+        char buffer[BUF_SIZE];
 
-    	/*
-    	 * 'apr_file_gets' lee una línea de fichero cada vez, y la mete en 'buffer'. Evidentemente
-    	 * recorrer cada línea del fichero en busca de la que corresponda con usuario/contraseña
-    	 * no es la mejor de las opciones.
-    	 */
-    	while (apr_file_gets(buffer, BUF_SIZE, f_logins) == APR_SUCCESS)
-    	{
+        /*
+         * 'apr_file_gets' lee una línea de fichero cada vez, y la mete en 'buffer'. Evidentemente
+         * recorrer cada línea del fichero en busca de la que corresponda con usuario/contraseña
+         * no es la mejor de las opciones.
+         */
+        while (apr_file_gets(buffer, BUF_SIZE, f_logins) == APR_SUCCESS)
+        {
 ```
-Vamos leyendo el fichero de *logins* línea por línea, la línea se va guardando en *buffer*.
+Vamos leyendo el fichero de logins línea por línea, la línea se va guardando en *buffer*.
 
 
 
 POR TERMINAR...
 
 ```c
-    	
-    		if (flush_mode)
-    		{
-    			// Si estamos en modo 'flush', imprimimos la línea leída y continuamos con el bucle.
-    			ap_rprintf(r, "%s<br>", buffer);
-    		}
-    		else
-    		{
-    			/*
-    			 * Declaramos un buffer auxiliar (para usar 'strtok') y las variables
-    			 * para referenciar el usuario, la contraseña y la información
-    			 * leída del fichero de logins.
-    			 */
-    			char aux_buf[BUF_SIZE], *f_user, *f_passwd, *f_info;
-				strcpy(aux_buf, buffer);
+            if (flush_mode)
+            {
+                // Si estamos en modo flush, imprimimos la línea leída y continuamos con el bucle.
+                ap_rprintf(r, "%s<br>", buffer);
+            }
+            else
+            {
+                /*
+                 * Declaramos un buffer auxiliar (para usar 'strtok') y las variables
+                 * para referenciar el usuario, la contraseña y la información
+                 * leída del fichero de logins.
+                 */
+                char aux_buf[BUF_SIZE], *f_user, *f_passwd, *f_info;
+                strcpy(aux_buf, buffer);
 	
-				f_user = strtok(aux_buf, ":");
+                f_user = strtok(aux_buf, ":");
 	
-				// Si el usuario que nos dan coincide.
-				if (f_user && !strcmp(user, f_user))
-				{
-					user_found = TRUE;
-					f_passwd = strtok(NULL, ":");
+                // Si el usuario que nos dan coincide.
+                if (f_user && !strcmp(user, f_user))
+                {
+                    user_found = TRUE;
+                    f_passwd = strtok(NULL, ":");
 	
-					// Si la contraseña coincide.
-					if (f_passwd && !strcmp(passwd, f_passwd))
-					{
-						f_info = strtok(NULL, ";");
+                    // Si la contraseña coincide.
+                    if (f_passwd && !strcmp(passwd, f_passwd))
+                    {
+                        f_info = strtok(NULL, ";");
 	
-						// Imprimimos la información del usuario leída del fichero de logins.
-						ap_rprintf(r, "Bienvenido <b>%s</b>, autenticacion correcta, "
-								"tu informacion secreta es: ",
-								user);
+                        // Imprimimos la información del usuario leída del fichero de logins.
+                        ap_rprintf(r, "Bienvenido <b>%s</b>, autenticacion correcta, "
+                                        "tu informacion secreta es: ",
+                                        user);
 	
-						if (f_info)
-							ap_rprintf(r, "<b><span style=\"color:blue\">'%s'</span></b>.", f_info);
+                        if (f_info)
+                            ap_rprintf(r, "<b><span style=\"color:blue\">'%s'</span></b>.", f_info);
 	
-						break;
-					}
-					// Si la contraseña no coincide.
-					else
-					{
-						/*
-						 * Imprimimos un mensaje de error y guardamos la información del login
-						 * incorrecto en el archivo de logs.
-						 */
+                        break;
+                    }
+                    // Si la contraseña no coincide.
+                    else
+                    {
+                        /*
+                         * Imprimimos un mensaje de error y guardamos la información del login
+                         * incorrecto en el archivo de logs.
+                         */
 	
-						ap_rputs("<span style=\"color:red\"><b>Contrasena incorrecta!</b> "
-							"Este incidente sera reportado al admin :)</span>", r);
+                        ap_rputs("<span style=\"color:red\"><b>Contrasena incorrecta!</b> "
+                                    "Este incidente sera reportado al admin :)</span>", r);
 	
-						sprintf(aux_buf, "Password incorrect login= %s:%s;\r",
-							user, passwd);
+                        sprintf(aux_buf, "Password incorrect login= %s:%s;\r",
+                            user, passwd);
 	
-						apr_size_t b_written = strlen(aux_buf);
+                        apr_size_t b_written = strlen(aux_buf);
+                        apr_file_write(f_logs, aux_buf, &b_written);
 	
-						apr_file_write(f_logs, aux_buf, &b_written);
-	
-						break;
-					}
-				}
-    		}
-    	}
+                        break;
+                    }
+                }
+            }
+        }
 
-    	apr_file_close(f_logins);
-		apr_file_close(f_logs);
+        apr_file_close(f_logins);
+        apr_file_close(f_logs);
     }
 
     if (flush_mode)
-    	ap_rputs("</code></p>", r);
+        ap_rputs("</code></p>", r);
     else if (!user_found)
-    	ap_rprintf(r, "<span style=\"color:red\">El usuario <b>%s</b> no existe!</span>",
-		user);
+        ap_rprintf(r, "<span style=\"color:red\">El usuario <b>%s</b> no existe!</span>",
+                user);
 
     return OK;
 }
