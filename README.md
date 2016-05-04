@@ -32,6 +32,7 @@ Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedi
     * [Funciones para manejar las directivas](#funciones-para-manejar-las-directivas)
   * [Registrar nuestras funciones con el servidor](#registrar-nuestras-funciones-con-el-servidor)
   * [Crear nuestro propio handler](#crear-nuestro-propio-handler)
+* [Archivo *.conf* de configuración del módulo](#archivo-conf-de-configuración-del-módulo)
 * [Referencias](#referencias)
 
 ## Introducción
@@ -459,3 +460,59 @@ Si el usuario coincide pero la contraseña no, imprimimos un mensaje de error y 
 }
 ```
 Por último, si al recorrer el fichero de logins no hemos encontrado el usuario que nos han indicado, indicamos que no existe. Devolvemos [*OK*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__DAEMON.html#gaba51915c87d64af47fb1cc59348961c9).
+
+## Archivo *.conf* de configuración del módulo
+
+Al usar [apxs](#compilar-instalar-y-activar-nuestro-módulo-en-el-servidor) para instalar nuestro módulo en Apache, crea un archivo *auth_example.load* en la carpeta *mods-available* del directorio de instalación de Apache (en mi caso `/etc/apache2`) que contiene lo siguiente:
+
+`LoadModule auth_example_module /usr/lib/apache2/modules/mod_auth_example.so`
+
+También habrá creado un enlace simbólico a este fichero dentro del directorio *mods-enabled*. Al iniciarse, Apache leerá este fichero y cargará nuestro módulo que se encuentra en la ruta indicada.
+
+Solamente queda especificar la configuración de nuestro módulo en su respectivo archivo *.conf*, en la terminal:
+
+`nano /etc/apache2/mods-available/auth_example.conf`
+
+Y escribir la configuración que deseemos, por ejemplo:
+```
+<IfModule auth_example_module>
+    <Location "/auth">
+        SetHandler auth_example-handler
+        AuthExampleLoginsPath "/etc/apache2/mod_auth_example-logins"
+        AuthExampleLogsPath "/etc/apache2/mod_auth_example-logs"
+        AuthExampleFlush deny
+    </Location>
+
+    <Location "/auth/flush">
+        AuthExampleFlush allow
+    </Location>
+
+    <Location "/auth/flush/deny">
+        AuthExampleFlush deny
+    </Location>
+</IfModule>
+```
+Con esta configuración, le estamos indicando a Apache que el handler de la localización */auth* es *auth_example-handler* (nuestro handler) y configurando las [directivas](#directivas) de nuestro módulo con las rutas hacia los ficheros de logins y logs y la directiva para permitir o no el modo flush. Como fue explicado en la función [*merge_dir_conf*](#merge_dir_conf), las localizaciones son capaces de heredar naturalmente la configuración de su padre.
+Para que Apache cargue el archivo *.conf* de nuestro módulo al arrancar, tendremos también que crear un enlace simbólico a este fichero en la carpeta *mods-enabled*:
+
+`ln -s /etc/apache2/mods-available/auth_example.conf /etc/apache2/mods-enabled`
+
+Finalmente, faltaría crear los ficheros de logins y logs con los permisos adecuados:
+```
+touch /etc/apache2/mod_auth_example-logins
+touch /etc/apache2/mod_auth_example-logs
+
+chgrp www-data /etc/apache2/mod_auth_example-logins
+chgrp www-data /etc/apache2/mod_auth_example-logs
+
+chmod g+rwx /etc/apache2/mod_auth_example-logins
+chmod g+rwx /etc/apache2/mod_auth_example-logs
+```
+Y rellenar el fichero de logins con algunos datos, por ejemplo:
+```
+valen:mypasswd:This is my secret message.;
+nelav:passwdmy:My secret message is this.;
+prueba:apasswd:Mi prueba.;
+```
+
+Antes de probar si la configuración funciona, ¡hay que reiniciar Apache (`apachectl restart`)! (:
