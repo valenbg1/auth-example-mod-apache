@@ -21,7 +21,7 @@
 // Comprueba si una c string está vacía.
 #define STREMPTY(string) (string[0] == '\0')
 
-// Definición del tipo 'bool' para mayor legibilidad del código.
+// Definición del tipo bool para mayor legibilidad del código.
 typedef char bool;
 
 // Estructura que contiene la configuración del módulo.
@@ -56,7 +56,7 @@ void *merge_dir_conf(apr_pool_t *pool, void *BASE, void *ADD);
 static const command_rec directives[] =
 {
 	/*
-	 *  Con esta macro declaramos una directiva con nombre 'AuthExampleLoginsPath',
+	 * Con esta macro declaramos una directiva con nombre 'AuthExampleLoginsPath',
 	 * que acepta 1 parámetro, la función que la maneja es 'set_logins_path', a NULL
 	 * la función opcional que guarda la configuración, y el contexto en el que se aceptará
 	 * esta directiva, en este caso 'ACCESS_CONF', permitimos este argumento en archivos '.conf'
@@ -64,12 +64,12 @@ static const command_rec directives[] =
 	 * de la directiva.
 	 */
 	AP_INIT_TAKE1("AuthExampleLoginsPath", set_logins_path, NULL, ACCESS_CONF,
-			"Sets the logins file path"),
+		"Sets the logins file path"),
 
 	AP_INIT_TAKE1("AuthExampleLogsPath", set_logs_path, NULL, ACCESS_CONF,
-				"Sets the logs file path"),
+		"Sets the logs file path"),
 	AP_INIT_TAKE1("AuthExampleFlush", set_flush, NULL, ACCESS_CONF,
-			"Allows the 'flush' mode [allow|deny]"),
+		"Allows the 'flush' mode [allow|deny]"),
 	{ NULL }
 };
 
@@ -101,7 +101,7 @@ static int auth_example_handler(request_rec *r)
 
     /*
      * Pedimos a Apache que nos dé la estructura de configuración (que es dependiente del contexto, p.e.
-     * bloques tipo <Directory> o <Location> en el archivo .conf del módulo).
+     * bloques tipo <Directory> o <Location> en el archivo '.conf' del módulo).
      */
     auth_ex_cfg *config = (auth_ex_cfg*) ap_get_module_config(r->per_dir_config, &auth_example_module);
 
@@ -111,7 +111,7 @@ static int auth_example_handler(request_rec *r)
      * funciones comunes de los SOs. Si los paths no apuntan a un fichero o apuntan
      * a un directorio, devolvemos un 'HTTP_NOT_FOUND' (404). Si no se ha podido ejecutar el 'stat',
      * probablemente no tenemos permiso para acceder a los ficheros, devolvemos un 'HTTP_FORBIDDEN'
-     * (403). Usamos el 'pool' de memoria que nos proporciona Apache.
+     * (403). Usamos el pool de memoria que nos proporciona Apache.
      */
 
     apr_finfo_t f_logins_info, f_logs_info;
@@ -135,7 +135,7 @@ static int auth_example_handler(request_rec *r)
 	/*
 	 * Pedimos a Apache que nos dé la tabla de argumentos de la consulta HTTP tipo GET en
 	 * la estructura correspondiente. Luego usamos las funciones definidas que nos permiten
-	 * 'parsear' la tabla para recoger los argumentos 'user' y 'passwd' respectivamente.
+	 * parsear la tabla para recoger los argumentos 'user' y 'passwd' respectivamente.
 	 */
 
     ap_args_to_table(r, &GET);
@@ -143,7 +143,7 @@ static int auth_example_handler(request_rec *r)
     passwd = apr_table_get(GET, "passwd");
 
     /*
-     * Estamos en modo 'flush' si 'config->flush' ha sido activado y no nos proporcionan
+     * Estamos en modo flush si 'config->flush' es TRUE y no nos proporcionan
      * usuario o contraseña. En caso contrario, si falta alguno de los dos argumentos
      * devolvemos un 'HTTP_NETWORK_AUTHENTICATION_REQUIRED' (511).
      */
@@ -158,7 +158,7 @@ static int auth_example_handler(request_rec *r)
 
     /*
      * 'ap_rprintf' permite devolver contenido a una request (referenciado por 'r')
-     * al estilo 'printf'. Devolvemos la configuración de nuestro módulo.
+     * al estilo printf. Devolvemos la configuración de nuestro módulo.
      */
     ap_rprintf(r, "<h2><u>Bienvenido al sistema superseguro de autenticacion</h2>"
 					"<b>Mi configuracion es:</u>"
@@ -179,8 +179,8 @@ static int auth_example_handler(request_rec *r)
 
 
     /*
-     * Ahora procedemos a abrir los ficheros de logins (en modo lectura 'buffered') y de logs (en modo escritura
-     * 'append'), con los permisos por defecto y usando el 'pool' de memoria que nos proporciona Apache.
+     * Ahora procedemos a abrir los ficheros de logins (en modo lectura buffered) y de logs (en modo escritura
+     * append), con los permisos por defecto y usando el pool de memoria que nos proporciona Apache.
      * Una mejor solución sería tener estos ficheros cargados previamente en memoria (p.e. en una
      * configuración inicial del módulo) para poder consultarlos más rápidamente en cada petición.
      */
@@ -201,7 +201,7 @@ static int auth_example_handler(request_rec *r)
     	{
     		if (flush_mode)
     		{
-    			// Si estamos en modo 'flush', imprimimos la línea leída y continuamos con el bucle.
+    			// Si estamos en modo flush, imprimimos la línea leída y continuamos con el bucle.
     			ap_rprintf(r, "%s<br>", buffer);
     		}
     		else
@@ -248,7 +248,7 @@ static int auth_example_handler(request_rec *r)
 									"Este incidente sera reportado al admin :)</span>", r);
 
 						sprintf(aux_buf, "Password incorrect login= %s:%s;\r",
-								user, passwd);
+							user, passwd);
 
 						apr_size_t b_written = strlen(aux_buf);
 						apr_file_write(f_logs, aux_buf, &b_written);
@@ -278,10 +278,10 @@ static int auth_example_handler(request_rec *r)
 static void register_hooks(apr_pool_t *p)
 {
 	/*
-	 * En este caso, registramos un nuevo 'handler' cuya función es
+	 * En este caso, registramos un nuevo handler cuya función es
 	 * 'auth_example_handler'. Con 'APR_HOOK_LAST' le indicamos a
-	 * Apache que nuestro 'handler' debe ser llamado de los últimos en
-	 * la cola (p.e. después de 'mod_rewrite', módulo que redirecciona urls
+	 * Apache que nuestro handler debe ser llamado de los últimos en
+	 * la cola (p.e. después de mod_rewrite, módulo que reescribe urls
 	 * al estilo /parent/child a /parent?child=1).
 	 */
     ap_hook_handler(auth_example_handler, NULL, NULL, APR_HOOK_LAST);
@@ -298,7 +298,7 @@ void *create_dir_conf(apr_pool_t *pool, char *context)
 
 	/*
 	 * Pedimos memoria para alojar una nueva estructura 'auth_ex_cfg'
-	 * en el 'pool' de memoria que nos deja Apache para nuestro módulo
+	 * en el pool de memoria que nos deja Apache para nuestro módulo
 	 * (referenciado con el argumento 'pool'). En este caso además se inicializa
 	 * el espacio reservado con 0's.
 	 */
@@ -341,7 +341,7 @@ void *merge_dir_conf(apr_pool_t *pool, void *BASE, void *ADD)
 
     /*
      * El valor del campo 'flush' no se hereda, tendrá que ser definido para cada
-     * localización explícitamente o se usará el valor por defecto ('FALSE').
+     * localización explícitamente o se usará el valor por defecto (FALSE).
      */
     conf->flush = add->flush;
 
@@ -362,8 +362,8 @@ const char *set_logins_path(cmd_parms *cmd, void *cfg, const char *arg)
 	{
 		/*
 		 * '*arg' sería el argumento del parámetro 'AuthExampleLoginsPath' que
-		 * se encuentra en el fichero '.conf'
-		 * (p.e. 'AuthExampleLoginsPath /etc/apache2/mod_auth_example-logins').
+		 * se encuentra en el fichero .conf
+		 * (p.e. AuthExampleLoginsPath "/etc/apache2/mod_auth_example-logins").
 		 */
 		strcpy(config->logins_path, arg);
 	}
@@ -385,8 +385,8 @@ const char *set_logs_path(cmd_parms *cmd, void *cfg, const char *arg)
 	{
 		/*
 		 * '*arg' sería el argumento del parámetro 'AuthExampleLogsPath' que
-		 * se encuentra en el fichero '.conf'
-		 * (p.e. 'AuthExampleLogsPath /etc/apache2/mod_auth_example-logs').
+		 * se encuentra en el fichero .conf
+		 * (p.e. AuthExampleLogsPath "/etc/apache2/mod_auth_example-logs").
 		 */
 		strcpy(config->logs_path, arg);
 	}
@@ -408,7 +408,7 @@ const char *set_flush(cmd_parms *cmd, void *cfg, const char *arg)
 	{
 		/*
 		 * '*arg' sería el argumento del parámetro 'AuthExampleFlush' que
-		 * se encuentra en el fichero '.conf' (p.e. 'AuthExampleFlush allow').
+		 * se encuentra en el fichero .conf (p.e. AuthExampleFlush allow).
 		 */
 		config->flush = !strcasecmp(arg, "allow") ? TRUE : FALSE;
 	}
