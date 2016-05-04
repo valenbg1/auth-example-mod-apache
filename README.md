@@ -373,16 +373,15 @@ Ahora procedemos a abrir los ficheros de logins (en modo lectura buffered) y de 
 ```
 Vamos leyendo el fichero de logins línea por línea, la línea se va guardando en *buffer*.
 
-
-
-POR TERMINAR...
-
 ```c
             if (flush_mode)
             {
-                // Si estamos en modo flush, imprimimos la línea leída y continuamos con el bucle.
                 ap_rprintf(r, "%s<br>", buffer);
             }
+```
+Si estamos en modo flush, imprimimos la línea leída y continuamos con el bucle.
+
+```c
             else
             {
                 /*
@@ -416,6 +415,10 @@ POR TERMINAR...
 	
                         break;
                     }
+```
+Comprobamos usuario / contraseña contra la línea leída de fichero, si coinciden, imprimimos la información del usuario que también está guardada en el fichero de logins.
+
+```c
                     // Si la contraseña no coincide.
                     else
                     {
@@ -442,7 +445,10 @@ POR TERMINAR...
         apr_file_close(f_logins);
         apr_file_close(f_logs);
     }
+```
+Si el usuario coincide pero la contraseña no, imprimimos un mensaje de error y guardamos el intento de login incorrecto en el fichero de logs.
 
+```c
     if (flush_mode)
         ap_rputs("</code></p>", r);
     else if (!user_found)
@@ -452,3 +458,4 @@ POR TERMINAR...
     return OK;
 }
 ```
+Por último, si al recorrer el fichero de logins no hemos encontrado el usuario que nos han indicado, indicamos que no existe. Devolvemos [*OK*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__DAEMON.html#gaba51915c87d64af47fb1cc59348961c9).
