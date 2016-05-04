@@ -57,7 +57,7 @@ En la terminal, en el directorio donde estemos trabajando:
 `apxs -cia mod_auth_example.c`
 * `-c`: compila el módulo.
 * `-i`: instala el módulo en la carpeta de Apache.
-* `-a`: activa el módulo en el archivo *.conf* de Apache (realmente sólo es necesario la primera vez).
+* `-a`: activa el módulo en la configuración de Apache (realmente sólo es necesario la primera vez).
 
 Después habrá que reiniciar el servidor: `apachectl restart`.
 
@@ -74,7 +74,7 @@ Para editar el código he usado Eclipse C/C++, que puede conseguirse en este [li
 Habrá que crear un nuevo proyecto a partir del *Makefile* plantilla que ya tenemos. En Eclipse:
 > File -> New -> Project... -> C/C++ -> Makefile Project with Existing Code
 
-* **Project Name**: p.e. Apache auth_example module.
+* **Project Name**: p.e. *Apache auth_example module*.
 * **Existing Code Location**: la carpeta donde esté el código fuente.
 * **Languages**: seleccionar sólo C.
 * **Toolchain for Indexer Settings**: yo estoy usando *Linux GCC*.
@@ -113,7 +113,7 @@ module AP_MODULE_DECLARE_DATA auth_example_module =
 Declaramos un nuevo módulo que se llamará *auth_example_module*:
 * [**create_dir_conf**](#create_dir_conf): función de nuestro módulo que creará una nueva configuración por directorio (las configuraciones se explican luego).
 * [**merge_dir_conf**](#merge_dir_conf): función de nuestro módulo que mezcla dos configuraciones distintas.
-* [**directives**](#directives): tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el archivo *.conf* de nuestro módulo (explicadas luego).
+* [**directives**](#directives): tabla de directivas, que son los argumentos que luego podemos utilizar para configurarlo en el [archivo *.conf* de nuestro módulo](#archivo-conf-de-configuración-del-módulo) (explicadas luego).
 * [**register_hooks**](#register_hooks): función para registrar nuestras funciones de enganche con el servidor.
 
 ### Configuración de nuestro módulo
@@ -194,7 +194,7 @@ void *merge_dir_conf(apr_pool_t *pool, void *BASE, void *ADD)
 
 ### Directivas
 
-Son los argumentos que luego podemos indicar en el archivo *.conf* de nuestro módulo para configurarlo. Es un array de estructuras [*command_rec*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__CONFIG.html#ga79f84e70f072880482a3fd004ae48710):
+Son los argumentos que luego podemos indicar en el [archivo *.conf* de nuestro módulo](#archivo-conf-de-configuración-del-módulo) para configurarlo. Es un array de estructuras [*command_rec*](http://ci.apache.org/projects/httpd/trunk/doxygen/group__APACHE__CORE__CONFIG.html#ga79f84e70f072880482a3fd004ae48710):
 <a name=directives></a>
 ```c
 static const command_rec directives[] =
@@ -224,11 +224,12 @@ Los contextos posibles en los que se acepta la directiva son:
 
 #### Funciones para manejar las directivas
 
-En el array de directivas anterior hemos definido que las funciones de manejo serían *set_logins_path*, *set_logs_path* y *set_flush*. Estas funciones controlan lo que pasa cuando en el fichero de configuración *.conf* del módulo tenemos alguna de las directivas que hemos indicado ([*AuthExampleLoginsPath*](#directives), [*AuthExampleLogsPath*](#directives) y [*AuthExampleFlush*](#directives)). Como ejemplo vamos a ver *set_logins_path* (las dos restantes pueden verse en el archivo [mod_auth_example.c](http://github.com/valenbg1/auth-example-mod-apache/blob/master/mod_auth_example.c)):
+En el array de directivas anterior hemos definido que las funciones de manejo serían *set_logins_path*, *set_logs_path* y *set_flush*. Estas funciones controlan lo que pasa cuando en el [fichero de configuración *.conf* del módulo](#archivo-conf-de-configuración-del-módulo) tenemos alguna de las directivas que hemos indicado (*AuthExampleLoginsPath*, *AuthExampleLogsPath* y *AuthExampleFlush*). Como ejemplo vamos a ver *set_logins_path* (las dos restantes pueden verse en el archivo [mod_auth_example.c](http://github.com/valenbg1/auth-example-mod-apache/blob/master/mod_auth_example.c)):
 <a name=set_logins_path></a>
 ```c
 const char *set_logins_path(cmd_parms *cmd, void *cfg, const char *arg)
 {
+    // Estructura de configuración creada previamente.
     auth_ex_cfg *config = (auth_ex_cfg*) cfg;
 
     if (config)
@@ -285,7 +286,7 @@ Apache nos pasa un puntero a una estructura de datos [*request_rec*](http://ci.a
 ```c
     auth_ex_cfg *config = (auth_ex_cfg*) ap_get_module_config(r->per_dir_config, &auth_example_module);
 ```
-Pedimos a Apache que nos dé la estructura de configuración para esta petición (que dependerá del contexto, p.e. bloques tipo \<Directory\> o \<Location\> en el archivo *.conf* del módulo).
+Pedimos a Apache que nos dé la estructura de configuración para esta petición (que dependerá del contexto, p.e. bloques tipo \<Directory\> o \<Location\> en el [archivo *.conf* del módulo](#archivo-conf-de-configuración-del-módulo)).
 
 ```c
     apr_finfo_t f_logins_info, f_logs_info;
@@ -365,14 +366,13 @@ Ahora procedemos a abrir los ficheros de logins (en modo lectura buffered) y de 
         char buffer[BUF_SIZE];
 
         /*
-         * 'apr_file_gets' lee una línea de fichero cada vez, y la mete en 'buffer'. Evidentemente
-         * recorrer cada línea del fichero en busca de la que corresponda con usuario/contraseña
-         * no es la mejor de las opciones.
+         * Evidentemente recorrer cada línea del fichero en busca de la que corresponda con
+         * usuario/contraseña no es la mejor de las opciones.
          */
         while (apr_file_gets(buffer, BUF_SIZE, f_logins) == APR_SUCCESS)
         {
 ```
-Vamos leyendo el fichero de logins línea por línea, la línea se va guardando en *buffer*.
+Vamos leyendo el fichero de logins línea por línea, [*apr_file_gets*](http://apr.apache.org/docs/apr/2.0/group__apr__file__io.html#gaf9513b769c10b09e5f37d6d0b86bdce9) lee una línea de fichero cada vez, y la mete en *buffer*.
 
 ```c
             if (flush_mode)
