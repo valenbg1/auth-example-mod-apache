@@ -16,7 +16,9 @@ Las pruebas se han realizado usando un SO [Debian](http://www.debian.org/distrib
 Valen Blanco ([GitHub](http://github.com/valenbg1)/[LinkedIn](http://www.linkedin.com/in/valenbg1)).
 
 <p align="center">
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Licencia de Creative Commons" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br /><sub>Este documento está bajo una <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">licencia de<br>Creative Commons Reconocimiento 4.0 Internacional</sub></a>
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Licencia de Creative Commons" style="border-width:0" src="http://i.creativecommons.org/l/by/4.0/88x31.png" /></a>
+<br><sub>Este documento está bajo una <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">licencia de<br>Creative Commons Reconocimiento 4.0 Internacional</a>.
+<br>El código fuente en C está bajo la <a href="http://github.com/valenbg1/auth-example-mod-apache/blob/master/LICENSE">licencia GPLv3</a>.</sub>
 </p>
 
 ## Índice
